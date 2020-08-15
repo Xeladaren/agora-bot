@@ -2,38 +2,55 @@ import discord
 import aiohttp
 import time
 import asyncio
-
+import os
+import _thread
 import config
 
+def checkFile():
+
+    fileMTime = 0
+
+    while True :
+        stat = os.stat("./test.log") # check si le fichier à été modifier.
+        if fileMTime != stat.st_mtime :
+            fileMTime = stat.st_mtime
+            print("file modif !!")
+        time.sleep(1)
+
 client = discord.Client()
+webhook = discord.Webhook.from_url(config.webhookURL, adapter=discord.RequestsWebhookAdapter())
+
+_thread.start_new_thread(checkFile, ())
 
 @client.event
 async def on_message(message):
-#    print("Author : ", message.author)
-#    print("Type : ", message.type)
-#    print("Channel : ", message.channel)
-#    print("Content : ", message.content)
-
-#    for attachment in message.attachments :
-#        print("Attachment : ", attachment)
 
     msg = "["+message.channel.name+"]<"+message.author.name+"> "+message.content
     print(msg)
 
+    guildMember = message.guild.get_member(message.author.id)
+
+    if guildMember :
+        print("Name : ", guildMember.name)
+        print("Nick : ", guildMember.nick)
+
     if not message.author.bot :
+
+        if message.content == "Salon" :
+            sendMsg = ""
+            for channel in message.guild.channels :
+                sendMsg += channel.name + "\n"
+            await message.channel.send(sendMsg)
+
         if message.content == "Bonjour" :
             sendMsg = "Coucou " + message.author.mention
             await message.channel.send(sendMsg)
 
-async def runCli() :
-    print("login")
-    await client.login(config.token, bot=True)
-    print("connect")
-    await client.connect(reconnect=True)
+        if message.channel.name == "chat-minecraft":
+            pseudo = guildMember.name
+            if guildMember.nick != None:
+                pseudo = guildMember.nick
 
+            webhook.send(message.content, username=pseudo)
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(runCli())
-
-webhook = discord.Webhook.from_url(config.webhookURL, adapter=discord.RequestsWebhookAdapter())
-webhook.send('Hello World', username='Xeladaren')
+client.run(config.token)
