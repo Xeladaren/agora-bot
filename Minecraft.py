@@ -75,7 +75,20 @@ def startLogParser():
     _thread.start_new_thread(__minecraftLogParser, ())
 
 def sayOnChat(pseudo, msg):
-    print("say on chat")
+
+    msg = msg.replace("\\", "\\"*8)
+    msg = msg.replace("\"", "\\"*4+"\"")
+    msg = msg.replace("`", "\\`")
+
+    tellRawArg  = "[\"\","
+    tellRawArg += "{\"text\":\"[\"},"
+    tellRawArg += "{\"text\":\"Discord\", \"color\":\"dark_aqua\"},"
+    tellRawArg += "{\"text\":\"]<"+pseudo+"> "+msg+"\"}]"
+
+    tellRawArg = tellRawArg.replace("\"", "\\\"")
+
+    bashCMD = "screen -S minecraft -X stuff \"tellraw @a "+tellRawArg+"\\n\""
+    os.system(bashCMD)
 
 def executeCmd(cmd):
-    print("minecraft cmd")
+    print("CMD : "+cmd)

@@ -3,10 +3,9 @@
 import time
 
 import Minecraft
+import Discord
 
 print("[INFO] Start Agora bot.")
 
 Minecraft.startLogParser()
-
-while True:
-    time.sleep(1)
+Discord.startBot()
