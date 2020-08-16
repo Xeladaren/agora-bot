@@ -89,7 +89,7 @@ def __minecraftServerInfoParser(rawMsg):
 
 def __minecraftListParser(rawMsg):
     splitText = rawMsg.split(":")
-
+    print("[DEBUG] list Parser")
     if len(splitText) >= 2 and len(splitText[0].split(" ")) >= 8 :
         playersCount = int(splitText[0].split(" ")[2])
         playersMax = int(splitText[0].split(" ")[7])
@@ -132,14 +132,20 @@ def __minecraftConnectParser(rawMsg):
 def startLogParser():
     _thread.start_new_thread(__minecraftLogParser, ())
 
-def getPlayersList():
+def getPlayersList(maj=True):
     playerInfo = {"count": 0, "max": 0, "list": []}
 
-    now = time.time()
-    executeCmd("list")
+    if maj :
+        now = time.time()
+        executeCmd("list")
 
-    while __playersListInfo["lastUpdate"] < now:
-        time.sleep(0.1)
+        timeout = 100
+        while __playersListInfo["lastUpdate"] <= now:
+            time.sleep(0.1)
+            timeout -= 1
+            if timeout <= 0 :
+                print("[ERROR] list info timeout")
+                break
 
     playerInfo["count"] = __playersListInfo["count"]
     playerInfo["max"] = __playersListInfo["max"]

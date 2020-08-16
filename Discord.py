@@ -17,10 +17,35 @@ def startBot():
     client.run(config.token)
 
 def sendBotMsg(msg):
+    future = asyncio.run_coroutine_threadsafe(__sendBotMsg(msg), client.loop)
+
+async def __sendBotMsg(msg):
     for channel in client.get_all_channels():
         if channel.name == config.channelName :
-            future = asyncio.run_coroutine_threadsafe(channel.send(msg), client.loop)
-            future.result()
+                await channel.send(msg)
+                await __updateTopic(channel)
+
+async def __updateTopic(channel, playersInfo=None):
+    print("[INFO] update channel topic")
+    if playersInfo == None:
+        playersInfo = Minecraft.getPlayersList()
+
+    if playersInfo != None :
+        topic = ""
+        if playersInfo["count"] > 1:
+            topic += "Joueurs en ligne "
+        else:
+            topic += "Joueur en ligne "
+
+        topic += str(playersInfo["count"])
+        topic += "/"
+        topic += str(playersInfo["max"])
+        topic += config.channelTopicSufix
+
+        print("[INFO] new topic on (", channel.name, ") :", topic)
+
+        out = await channel.edit(topic=topic)
+        print("channel edit return :", out)
 
 async def parseCommands(message) :
     print("[INFO] discord command :", message.content)
@@ -42,6 +67,7 @@ async def parseCommands(message) :
             msg += "\t - "+player+"\n"
 
         await message.channel.send(msg)
+        await __updateTopic(message.channel, playersInfo=playersList)
 
 @client.event
 async def on_message(message):
