@@ -157,23 +157,23 @@ def sayOnChat(pseudo, msg):
 
     print("[INFO] say on minecraft : [Discord]<"+pseudo+"> "+msg)
 
-    msg = msg.replace("\\", "\\"*8)
-    msg = msg.replace("\"", "\\"*4+"\"")
-    msg = msg.replace("`", "\\`")
-    msg = msg.replace("^", "\\^")
+    msg = msg.replace("\\", "\\\\")
+    msg = msg.replace("\"", "\\\"")
+
 
     tellRawArg  = "[\"\","
     tellRawArg += "{\"text\":\"[\"},"
     tellRawArg += "{\"text\":\"Discord\", \"color\":\"dark_aqua\"},"
     tellRawArg += "{\"text\":\"]<"+pseudo+"> "+msg+"\"}]"
 
-    tellRawArg = tellRawArg.replace("\"", "\\\"")
 
     bashCMD = "screen -S minecraft -X stuff \"tellraw @a "+tellRawArg+"\\n\""
-    os.system(bashCMD)
+    executeCmd("tellraw @a "+tellRawArg)
 
 def executeCmd(cmd):
     print("[INFO] execute minecraft command : "+cmd)
 
     bashCMD = "screen -S minecraft -X stuff \""+cmd+"\n\""
-    os.system(bashCMD)
+
+    minecraftConsole = open(os.path.abspath(config.servDir)+"/serv-input", "w")
+    minecraftConsole.write(cmd+"\n")
