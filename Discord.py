@@ -10,7 +10,10 @@ def sendPlayerMsg(pseudo, msg):
     print("[INFO] say on discord : <"+pseudo+"> "+msg)
 
     webhook = discord.Webhook.from_url(config.webhookURL, adapter=discord.RequestsWebhookAdapter())
-    webhook.send(msg, username=pseudo)
+
+    defaultHeadURL = "https://i.imgur.com/kHXRnzX.png" # steve head
+
+    webhook.send(msg, username=pseudo, avatar_url=defaultHeadURL)
 
 
 def startBot():
