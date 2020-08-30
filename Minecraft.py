@@ -2,6 +2,7 @@ import os
 import time
 import _thread
 import Discord
+import json
 
 import config
 
@@ -128,9 +129,47 @@ def __minecraftConnectParser(rawMsg):
         print("[INFO] "+msg)
         Discord.sendBotMsg(msg)
 
+def loadPlayersDBJson():
+
+    if os.path.isfile('playersDB.json'):
+        playersDBFile = open('playersDB.json', 'r')
+        playersDB = json.loads(playersDBFile.read())
+        playersDBFile.close()
+    else :
+        playersDB = []
+
+    whitelistFile = open(os.path.abspath(config.servDir)+"/whitelist.json", 'r')
+    whitelist = json.loads(whitelistFile.read())
+    whitelistFile.close()
+
+    for player in whitelist :
+
+        isInDB = False
+
+        for DBitem in playersDB :
+            if DBitem['minecraft-pseudo'] == player['name'] :
+                DBitem['minecraft-uuid'] = player['uuid']
+                isInDB = True
+
+
+
+        if not isInDB :
+            newDBItem = {
+                'minecraft-pseudo': player['name'],
+                'minecraft-uuid': player['uuid'],
+                'minecraft-head-url': "",
+                'discord-pseudo': ""
+            }
+            playersDB += [newDBItem]
+
+    playersDBFile = open('playersDB.json', 'w')
+    playersDBFile.write(json.dumps(playersDB, sort_keys=True, indent=4))
+    playersDBFile.close()
+
 
 def startLogParser():
     _thread.start_new_thread(__minecraftLogParser, ())
+    loadPlayersDBJson()
 
 def getPlayersList(maj=True):
     playerInfo = {"count": 0, "max": 0, "list": []}

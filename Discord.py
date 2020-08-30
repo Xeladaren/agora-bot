@@ -2,6 +2,7 @@ import discord
 import config
 import Minecraft
 import asyncio
+import json
 
 client = discord.Client()
 
@@ -12,6 +13,15 @@ def sendPlayerMsg(pseudo, msg):
     webhook = discord.Webhook.from_url(config.webhookURL, adapter=discord.RequestsWebhookAdapter())
 
     defaultHeadURL = "https://i.imgur.com/kHXRnzX.png" # steve head
+
+    playersDBFile = open('playersDB.json', 'r')
+    playersDB = json.loads(playersDBFile.read())
+    playersDBFile.close()
+
+    for playerData in playersDB :
+        if playerData['minecraft-pseudo'] == pseudo :
+            if playerData['minecraft-head-url'] != "":
+                defaultHeadURL = playerData['minecraft-head-url']
 
     webhook.send(msg, username=pseudo, avatar_url=defaultHeadURL)
 
@@ -54,7 +64,16 @@ async def parseCommands(message) :
     print("[INFO] discord command :", message.content)
     command = message.content.split(" ")
 
-    if ( "list" in command or "liste" in command ) and message.channel.name == config.channelName:
+    if "help" in command :
+        msg = "Les commandes disponibles sont :\n"
+        msg += "\n**help** : affiche cette aide."
+
+        if message.channel.name == config.channelName :
+            msg += "\n**list** : affiche la liste des joueurs connecté."
+
+        await message.channel.send(msg)
+
+    elif "list" in command and message.channel.name == config.channelName:
         playersList = Minecraft.getPlayersList()
         msg = "Il y a "+str(playersList["count"])
         if playersList["count"] > 1:
@@ -71,6 +90,11 @@ async def parseCommands(message) :
 
         await message.channel.send(msg)
         await __updateTopic(message.channel, playersInfo=playersList)
+
+    elif "debug" in command :
+        for member in message.channel.members :
+            print(member.name, member.nick)
+
 
 @client.event
 async def on_message(message):
