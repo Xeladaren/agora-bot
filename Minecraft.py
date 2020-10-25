@@ -202,8 +202,6 @@ def serverIsAlive():
     __serverInfo["diskUse"]  = diskStat.used
     __serverInfo["diskTot"]  = diskStat.total
 
-    print(servInputFilePath)
-
     if os.path.exists(servInputFilePath) :
         print("[INFO] serv input file ok.")
 
@@ -287,7 +285,8 @@ def sayOnChat(pseudo, msg):
 def executeCmd(cmd):
     print("[INFO] execute minecraft command : "+cmd)
 
-    bashCMD = "screen -S minecraft -X stuff \""+cmd+"\n\""
-
-    minecraftConsole = open(os.path.abspath(config.servDir)+"/serv-input", "w")
-    minecraftConsole.write(cmd+"\n")
+    if os.path.exists(os.path.abspath(config.servDir)+"/serv-input") :
+        minecraftConsole = open(os.path.abspath(config.servDir)+"/serv-input", "w")
+        minecraftConsole.write(cmd+"\n")
+    else :
+        print("[ERROR] server OFF")
