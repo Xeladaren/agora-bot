@@ -3,10 +3,12 @@ import time
 import _thread
 import Discord
 import json
+import psutil
 
 import config
 
 __playersListInfo = {"lastUpdate": 0,"count": 0, "max": 0, "list": []}
+__serverInfo = {"lastUpdate": 0, "tps1m": -1, "tps5m": -1, "tps15m": -1, "cpuUse": -1, "memUse": -1, "memTot": -1, "diskUse": -1, "diskTot": -1, "MapSize": -1}
 
 def __minecraftLogParser():
 
@@ -36,8 +38,8 @@ def __minecraftLogParser():
                         newLogLines = logLines[lastLineIndex+1:]
                     else :
                         newLogLines = logLines
-
-                lastLogLine = logLines[-1]
+                if len(logLines) > 0 :
+                    lastLogLine = logLines[-1]
 
 
                 for line in newLogLines :
@@ -87,6 +89,8 @@ def __minecraftServerInfoParser(rawMsg):
             __minecraftConnectParser(rawMsg)
         elif "left the game" in rawMsg:
             __minecraftConnectParser(rawMsg)
+        elif "TPS from last" in rawMsg:
+            __minecraftTpsParser(rawMsg)
 
 def __minecraftListParser(rawMsg):
     splitText = rawMsg.split(":")
@@ -129,6 +133,19 @@ def __minecraftConnectParser(rawMsg):
         print("[INFO] "+msg)
         Discord.sendBotMsg(msg)
 
+def __minecraftTpsParser(rawMsg):
+    print("[INFO] parse TPS ", rawMsg)
+
+    msgSplit = rawMsg.split(" ")
+
+    __serverInfo["tps1m"]  = float(msgSplit[6].replace(",", ""))
+    __serverInfo["tps5m"]  = float(msgSplit[7].replace(",", ""))
+    __serverInfo["tps15m"] = float(msgSplit[8].replace(",", ""))
+
+    __serverInfo["lastUpdate"] = time.time()
+
+    print(__serverInfo)
+
 def loadPlayersDBJson():
 
     if os.path.isfile('playersDB.json'):
@@ -170,6 +187,61 @@ def loadPlayersDBJson():
 def startLogParser():
     _thread.start_new_thread(__minecraftLogParser, ())
     loadPlayersDBJson()
+
+def serverIsAlive():
+
+    servInputFilePath = os.path.abspath(config.servDir)+"/serv-input"
+
+    __serverInfo["cpuUse"]  = psutil.cpu_percent()
+
+    memStat = psutil.virtual_memory()
+    __serverInfo["memUse"]  = memStat.used
+    __serverInfo["memTot"]  = memStat.total
+
+    diskStat = psutil.disk_usage(os.path.abspath(config.servDir))
+    __serverInfo["diskUse"]  = diskStat.used
+    __serverInfo["diskTot"]  = diskStat.total
+
+    if os.path.isfile(logFilePath) :
+        print("[INFO] serv file ok.")
+
+        now = time.time()
+        executeCmd("tps")
+
+        timeout = 100
+        while __serverInfo["lastUpdate"] <= now:
+            time.sleep(0.1)
+            timeout -= 1
+            if timeout <= 0 :
+                print("[INFO] TPS info timeout")
+                return False
+
+        return True
+
+    else :
+        return False
+
+def serverStat():
+
+    out = {"alive": False, "tps1m": -1, "tps5m": -1, "tps15m": -1, "cpuUse": -1, "memUse": -1, "memTot": -1, "diskUse": -1, "diskTot": -1, "MapSize": -1}
+
+    if serverIsAlive():
+        out["alive"]  = True
+        out["tps1m"]  = __serverInfo["tps1m"]
+        out["tps5m"]  = __serverInfo["tps5m"]
+        out["tps15m"] = __serverInfo["tps15m"]
+    else :
+        out["alive"] = False
+
+    out["cpuUse"]  = __serverInfo["cpuUse"]
+    out["memUse"]  = __serverInfo["memUse"]
+    out["memTot"]  = __serverInfo["memTot"]
+    out["diskUse"] = __serverInfo["diskUse"]
+    out["diskTot"] = __serverInfo["diskTot"]
+    out["MapSize"] = __serverInfo["MapSize"]
+
+    return out
+
 
 def getPlayersList(maj=True):
     playerInfo = {"count": 0, "max": 0, "list": []}

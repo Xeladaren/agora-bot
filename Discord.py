@@ -91,6 +91,29 @@ async def parseCommands(message) :
         await message.channel.send(msg)
         await __updateTopic(message.channel, playersInfo=playersList)
 
+    elif "stats" in command and message.channel.name == config.channelName :
+        servStat = Minecraft.serverStat()
+
+        msg = "Serveur status :\n"
+
+        if servStat["alive"]:
+            msg += "**Minecraft** : ON\n"
+            if (servStat["tps1m"] != -1) and (servStat["tps5m"] != -1) and (servStat["tps15m"] != -1):
+                msg += "**Minecraft TPS** : "+str(servStat["tps1m"])+"(1m) "+str(servStat["tps5m"])+"(5m) "+str(servStat["tps15m"])+"(15m)\n"
+        else :
+            msg += "**Minecraft** : OFF\n"
+
+        if (servStat["cpuUse"] != -1):
+            msg += "**Utilisation CPU** : "+str(servStat["cpuUse"])+" %\n"
+
+        if (servStat["memUse"] != -1) and (servStat["memTot"] != -1):
+            msg += "**Utilisation Memoire** : "+str(round(servStat["memUse"] / 10**9, 2))+" Go / "+str(round(servStat["memTot"] / 10**9, 2))+" Go\n"
+
+        if (servStat["diskUse"] != -1) and (servStat["diskTot"] != -1):
+            msg += "**Utilisation Disque** : "+str(round(servStat["diskUse"] / 10**9, 2))+" Go / "+str(round(servStat["diskTot"] / 10**9, 2))+" Go\n"
+
+        await message.channel.send(msg)
+
     elif "debug" in command :
         for member in message.channel.members :
             print(member.name, member.nick)
