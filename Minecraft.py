@@ -204,7 +204,7 @@ def serverIsAlive():
 
     print(servInputFilePath)
 
-    if os.path.isfile(servInputFilePath) :
+    if os.path.exists(servInputFilePath) :
         print("[INFO] serv input file ok.")
 
         now = time.time()
