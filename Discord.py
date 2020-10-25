@@ -70,6 +70,7 @@ async def parseCommands(message) :
 
         if message.channel.name == config.channelName :
             msg += "\n**list** : affiche la liste des joueurs connecté."
+            msg += "\n**stats** : affiche les stats serveur."
 
         await message.channel.send(msg)
 
