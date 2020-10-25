@@ -202,8 +202,10 @@ def serverIsAlive():
     __serverInfo["diskUse"]  = diskStat.used
     __serverInfo["diskTot"]  = diskStat.total
 
+    print(servInputFilePath)
+
     if os.path.isfile(servInputFilePath) :
-        print("[INFO] serv file ok.")
+        print("[INFO] serv input file ok.")
 
         now = time.time()
         executeCmd("tps")
@@ -219,6 +221,7 @@ def serverIsAlive():
         return True
 
     else :
+        print("[INFO] serv input file ko.")
         return False
 
 def serverStat():
